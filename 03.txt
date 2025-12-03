@@ -1,0 +1,484 @@
+character stuffing
+import java.util.*;
+public class charStuffing{
+    public static void main(String[] args){
+        Scanner sc = new Scanner(System.in);
+        String flag = "@";
+        String esc = "#";
+        String s = sc.nextLine();
+        StringBuilder res = new StringBuilder();
+        res.append(flag);
+        for(char ch : s.toCharArray()){
+            if(ch == '@' || ch == '#'){
+                res.append(esc);
+            }
+            res.append(ch);
+        }
+        res.append(flag);
+        System.out.println(res);
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bit stuffing
+import java.util.*;
+class BitStuffing{
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();
+        int count =0;
+        String flag = "01111110";
+        StringBuilder res = new StringBuilder();
+        for(char ch : input.toCharArray()){
+            if(ch=='1')
+            {
+                count++;
+            }
+            else
+            {
+                count =0;
+            }
+            res.append(ch);
+            if(count==5)
+            {
+                res.append('0');
+                count=0;
+            }
+        }
+        String finalstring = flag +res.toString()+ flag;
+        System.out.println(finalstring);
+
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+crc
+import java.util.*;
+public class CRC {
+    static String xor(String a,String b){
+        StringBuilder res = new StringBuilder();
+        for(int i = 1 ; i < b.length() ; i++){
+            res.append((a.charAt(i) == b.charAt(i))? '0' : '1');
+        }
+        return res.toString();
+    }
+    static String mod2div(String dividend , String divisor){
+        int pick = divisor.length();
+        String k = dividend.substring(0,pick);
+        while (pick<dividend.length()) {
+            if(k.charAt(0) == '1'){
+                k = xor(divisor,k) + dividend.charAt(pick);
+            }
+            else{
+                k = xor("0".repeat(pick),k) + dividend.charAt(pick);
+            }
+            pick++;
+        }
+        if(k.charAt(0) == '1'){
+            k = xor(divisor,k);
+        }
+        else{
+            k = xor("0".repeat(pick),k);
+        }
+        return k;
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String data = sc.nextLine();
+        System.out.println("divisor : ");
+        String divisor = sc.nextLine();
+        String dividend = data + "0".repeat(divisor.length()-1);
+        String res = mod2div(dividend,divisor);
+        String codeString = data+res;
+        System.out.println(codeString);
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+sliding window
+import java.util.*;
+public class GBN {
+    static void Simulate(int total,int ws , Set<Integer> lostframes){
+        int ack = 0;
+        int nextFrameToSend = 0;
+        while(ack < total){
+            System.out.println("Sending frames ....");
+            for(int i = 0 ; i < ws && nextFrameToSend < total ; i++){
+                int frame = nextFrameToSend;
+                if(lostframes.contains(frame)){
+                    System.out.println("Frame "+frame+" Not Sent.");
+                }
+                else{
+                    System.out.println("Frame "+frame+" sent.");
+                }
+                nextFrameToSend++;
+            }
+            int firstLost = -1;
+            for(int i = 0 ; i < nextFrameToSend ; i++){
+                if(lostframes.contains(i)){
+                    firstLost = i;
+                    break;
+                }
+            }
+            if(firstLost == -1){
+                ack = nextFrameToSend;
+                System.out.println("Acknowledgment received for all frames upto "+(ack-1));
+            }
+            else{
+                System.out.println("Acknowledment received for frames upto "+(firstLost-1));
+                ack = firstLost;
+                nextFrameToSend = firstLost;
+                lostframes.remove(firstLost);
+            }
+        }
+        System.out.println("All frames received successfully.");
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter the no of frames : ");
+        int total = sc.nextInt();
+        System.out.println("Enter the window size : ");
+        int ws = sc.nextInt();
+        System.out.println("Enter no of frames lost : ");
+        int lost = sc.nextInt();
+        Set<Integer> lostframes = new HashSet<>();
+        if(lost > 0){
+            System.out.println("Enter the lost frames from 0 to "+total);
+            for(int i = 0 ; i < lost ; i++){
+                lostframes.add(sc.nextInt());
+            }
+        }
+        Simulate(total,ws,lostframes);
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+subnetting
+import java.util.*;
+public class subnetting {
+    static long IpInt(String ip){
+        String[] parts = ip.split("\\.");
+        return (Long.parseLong(parts[0])<<24) |
+                (Long.parseLong(parts[1]) << 16)|
+                (Long.parseLong(parts[2]) << 8) |
+                (Long.parseLong(parts[3])) ;
+    }
+    static String intToIp(long ip){
+        return ((ip >> 24) &0xFF) + "."+
+                ((ip >> 16) & 0xFF) + "."+
+                ((ip >> 8) & 0xFF) + "." +
+                (ip & 0xFF);
+    }
+    static long subnetMask(int prefix){
+        return prefix == 0 ? 0 :(~((1L << (32-prefix))-1) & 0xFFFFFFFFL);
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String ip = sc.nextLine();
+        int prefixlen = sc.nextInt();
+        long ipint = IpInt(ip); 
+        int newprefix = prefixlen+1;
+        long oldMask = subnetMask(prefixlen);
+        long newmask = subnetMask(newprefix);
+        long hosts = (1L << (32-newprefix))-2;
+        System.out.println(hosts);
+        for(int i = 0 ; i < 2 ; i++){
+            long baseNetwork = ipint & oldMask;
+            long subnet = baseNetwork | ((long)i << (32-newprefix));
+            long broadcast = subnet | ~(newmask & 0xFFFFFFFFL);
+            System.out.println("\nSubnet " + (i + 1) + ":");
+            System.out.println("Network Address  : " + intToIp(subnet));
+            System.out.println("Broadcast Address: " + intToIp(broadcast));
+            System.out.println("Subnet Mask      : " + intToIp(newmask));
+            System.out.println("First Host       : " + intToIp(subnet + 1));
+            System.out.println("Last Host        : " + intToIp(broadcast - 1));
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+dvr
+import java.util.*;
+public class DVR1 {
+    static final int INF = 999;
+    static void initialize(int n , int cost[][],int[][] dist , int[][] next){
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                dist[i][j] = cost[i][j];
+                if(i == j){
+                    next[i][j] = i;
+                }
+                if(cost[i][j]!=INF){
+                    next[i][j] = j;
+                }
+                else{
+                    next[i][j] = -1;
+                }
+                // next[i][j] = (cost[i][j] != INF && i!=j) ? j : -1;
+            }
+        }
+    }
+    static void DVR(int[][] dist , int[][] next){
+        boolean changed;
+        do{
+            changed = false;
+            for(int i = 0 ; i < dist.length ; i++){
+                for (int j = 0; j < dist.length; j++) {
+                    for (int k = 0; k < dist.length; k++) {
+                        if(dist[i][k] + dist[k][j] < dist[i][j]){
+                            dist[i][j] = dist[i][k]+dist[k][j];
+                            next[i][j] = next[i][k];
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }while(changed);
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[][] cost = new int[n][n];
+        int[][] dist = new int[n][n];
+        int[][] next = new int[n][n];
+        for(int i = 0; i < n ; i++){
+            for(int j = 0 ; j < n ; j++){
+                cost[i][j] = sc.nextInt();
+            }
+        }
+        initialize(n, cost, dist, next);
+        DVR(dist, next);
+        for(int i = 0 ; i < n ; i++){
+            System.out.println("Routing table for router "+i);
+            for (int j = 0; j < n; j++) {
+                if(dist[i][j] == INF){
+                    System.out.println(j+"\t-\tINF");
+                }
+                else{
+                    System.out.println(j+"\t"+next[i][j]+"\t"+dist[i][j]);
+                }
+            }
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+dijkshtra
+import java.util.*;
+public class ShortestPath {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        try {
+            System.out.print("Number of nodes: ");
+            int n = Integer.parseInt(sc.nextLine().trim());
+            int[][] g = new int[n][n];
+            System.out.println("Enter adjacency matrix (n rows, each row has n integers, 0 means no edge):");
+            for (int i = 0; i < n; i++) {
+                String[] parts = sc.nextLine().trim().split("\\s+");
+                if (parts.length != n) {
+                    System.out.println("Row " + i + " does not have " + n + " values. Exiting.");
+                    return;
+                }
+                for (int j = 0; j < n; j++) {
+                    g[i][j] = Integer.parseInt(parts[j]);
+                }
+            }
+            System.out.print("Source node (0-indexed): ");
+            int src = Integer.parseInt(sc.nextLine().trim());
+            if (src < 0 || src >= n) {
+                System.out.println("Invalid source index.");
+                return;
+            }
+            int[] dist = dijkstra(g, src);
+            System.out.println("Distances from " + src + ": " + Arrays.toString(dist));
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number input. Please enter integers only.");
+        } finally {
+            sc.close();
+        }
+    }
+    static int[] dijkstra(int[][] g, int src) {
+        int n = g.length;
+        final int INF = 1_000_000;
+        int[] dist = new int[n];
+        boolean[] vis = new boolean[n];
+        Arrays.fill(dist, INF);
+        dist[src] = 0;
+        for (int k = 0; k < n; k++) {
+            int u = -1, best = INF;
+            for (int i = 0; i < n; i++) {
+                if (!vis[i] && dist[i] < best) {
+                    best = dist[i];
+                    u = i;
+                }
+            }
+            if (u == -1) break;
+            vis[u] = true;
+            for (int v = 0; v < n; v++) {
+                int weight = g[u][v];
+                if (weight > 0 && dist[u] + weight < dist[v]) {
+                    dist[v] = dist[u] + weight;
+                }
+            }
+        }
+        return dist;
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+leaky bucket
+import java.util.*;
+public class Main {
+    public static void main(String[] args){
+        Scanner sc=new Scanner(System.in);
+        System.out.print("Bucket size: "); int bucketSize=Integer.parseInt(sc.nextLine().trim());
+        System.out.print("Leak rate per cycle: "); int leakRate=Integer.parseInt(sc.nextLine().trim());
+        System.out.print("Number of cycles: "); int cycles=Integer.parseInt(sc.nextLine().trim());
+        System.out.println("Enter arrivals for each cycle separated by space:");
+        String[] parts=sc.nextLine().trim().split("\\s+");
+        int stored=0;
+        for(int cycle=0; cycle<cycles; cycle++){
+            int arrival = Integer.parseInt(parts[Math.min(cycle, parts.length-1)]);
+            System.out.println("Cycle "+(cycle+1)+": arriving="+arrival);
+            stored += arrival;
+            if(stored > bucketSize){
+                System.out.println(" Overflow! dropped="+(stored-bucketSize));
+                stored = bucketSize;
+            }
+            int sent = Math.min(leakRate, stored);
+            stored -= sent;
+            System.out.println(" Sent="+sent+" Stored="+stored);
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+dns
+import java.net.InetAddress;
+import java.util.*;
+public class DNSlookup {
+    public static void main(String[] args) {
+        if(args.length == 0){
+            System.out.println("usage : java ping <hostname>");
+            return;
+        }
+        String hostname = args[0];
+        try{
+            System.out.println("Resolving Domain : " + hostname);
+            InetAddress inet = InetAddress.getByName(hostname);
+            if(inet.isReachable(2000)){
+                System.out.println(inet.getHostAddress());
+            }
+            InetAddress[] k = InetAddress.getAllByName(hostname);
+            for(InetAddress i : k){
+                System.out.println(i.getHostAddress());
+            }
+        }catch(Exception err){
+            System.out.println(err.getMessage());
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ping
+import java.net.*;
+import java.util.*;
+public class Ping {
+    public static void main(String[] args) {
+        if(args.length == 0){
+            System.out.println("Usage : Java Ping Service.");
+            return;
+        }
+        String hostname = args[0];
+        try{
+            System.out.println("Pinging to "+hostname+"....");
+            InetAddress inet = InetAddress.getByName(hostname);
+            for (int i = 0; i < 4; i++) {
+                long start = System.currentTimeMillis();
+                boolean l = inet.isReachable(2000);
+                long end = System.currentTimeMillis();
+                if(l){
+                    System.out.println(hostname+" is Reachable...");
+                    System.out.println(inet.getHostAddress()+"---"+(end-start)+"ms");
+                }
+                else{
+                    System.out.println(hostname + " is not reachable...");
+                    return;
+                }
+            }
+        }catch(Exception err){
+            System.out.println(err.getMessage());
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+xor with 0
+java code
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        String s = "Hello world";
+        System.out.println("Original String: " + s);
+        System.out.print("After XOR with 0: ");
+        for (int i = 0; i < s.length(); i++) {
+            char result = (char)(s.charAt(i) ^ 0);  // XOR with 0
+            System.out.print(result);
+        }
+        System.out.println();
+    }
+}
+--------------------------------------------------------------------------------
+c code
+#include <stdio.h>
+void main()
+{
+    char str[100];
+    int i = 0;
+    fgets(str, sizeof(str), stdin);
+    while (str[i] != '\0')
+    {
+        printf("%c\n", str[i] ^ 0);
+        i++;
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+xor and and with 127
+public class Main {
+    public static void main(String[] args) {
+        String s = "Hello world";
+        System.out.println("Original String: " + s);
+        System.out.print("After AND with 127: ");
+        for (int i = 0; i < s.length(); i++) {
+            char result = (char)(s.charAt(i) & 127);
+            System.out.print(result);
+        }
+        System.out.println();
+        System.out.print("After XOR with 127: ");
+        for (int i = 0; i < s.length(); i++) {
+            char result = (char)(s.charAt(i) ^ 127);
+            System.out.print(result);
+        }
+        System.out.println();
+    }
+}
+------------------------------------------------------------------------
+c code
+//X0R with 127
+#include <stdio.h>
+
+int main()
+{
+    char str[100];
+    int i;
+    printf("Enter a string: ");
+    fgets(str, sizeof(str), stdin);
+
+    printf("\nOriginal String: %s\n", str);
+    printf("Character\tASCII\tAND(127)\tXOR(127)\n");
+    printf("---------------------------------------------\n");
+
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] == '\n')
+            continue;
+
+        char and_result = str[i] & 127;
+        char xor_result = str[i] ^ 127;
+
+        printf("    %c\t\t%d\t   %d\t\t   %d\n", str[i], str[i], and_result, xor_result);
+    }
+
+    return 0;
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
