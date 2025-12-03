@@ -1,0 +1,755 @@
+GBN
+// GO-BACK-N ARQ
+
+import java.util.*;
+
+public class GoBackNARQ {
+
+    static int windowSize;
+    static int totalFrames;
+    static Random rand = new Random();
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("--- Go-Back-N ARQ Simulation ---");
+        System.out.print("Enter total number of frames to send: ");
+        totalFrames = sc.nextInt();
+        System.out.print("Enter window size: ");
+        windowSize = sc.nextInt();
+        simulateGoBackN();
+        sc.close();
+    }
+    public static void simulateGoBackN() {
+        int nextFrameToSend = 0;
+        int ackExpected = 0;
+        int[] acked = new int[totalFrames];
+
+        while (ackExpected < totalFrames) {
+            System.out.println("\nSender window: [" + ackExpected + " .. " + (ackExpected + windowSize - 1) + "]");
+            while (nextFrameToSend < ackExpected + windowSize && nextFrameToSend < totalFrames) {
+                if (acked[nextFrameToSend] == 0) {
+                    System.out.println("Sender: Sending frame " + nextFrameToSend);
+                }
+                nextFrameToSend++;
+            }
+            boolean loss = rand.nextInt(100) < 30;
+            if (!loss) {
+                int ack = nextFrameToSend - 1;
+                for (int i = ackExpected; i <= ack && i < totalFrames; i++) {
+                    acked[i] = 1;
+                }
+                System.out.println("Receiver: ACK " + ack);
+                ackExpected = ack + 1;
+            } else {
+                int lostFrame = ackExpected + rand.nextInt(Math.min(windowSize, totalFrames - ackExpected));
+                System.out.println("!! Frame " + lostFrame + " lost !!");
+                System.out.println("Receiver: No ACK, sender must retransmit from " + lostFrame);
+                nextFrameToSend = lostFrame;
+                for (int i = lostFrame; i < totalFrames; i++) {
+                    acked[i] = 0;
+                }
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        System.out.println("\nAll frames successfully transmitted and acknowledged!");
+    }
+}
+
+------------------------------------------------------------------------------------------------------------------------------
+
+dijkstra
+
+// dijkstra
+public class dijkstra {
+    static final int INFINITY=9999;
+    public static void dijkstralogic(int [][] graph,int n,int start){
+        int [] distance=new int[n];
+        boolean [] visited=new boolean[n];
+        int pred[]=new int[n];
+        for(int i=0;i<n;i++){
+            distance[i]=graph[start][i]==0?INFINITY:graph[start][i];
+            pred[i]=start;
+            visited[i]=false;   
+        }
+        distance[start]=0;
+        visited[start]=true;
+        //main loop
+        for(int count=0;count<n-1;count++){
+            int mindistance=INFINITY;
+            int nextnode=-1;
+            for(int i=0;i<n;i++){
+                if (!visited[i] && distance[i]<mindistance) {
+                    mindistance=distance[i];
+                    nextnode=i;
+                }
+            }
+                visited[nextnode]=true;
+            
+            for(int i=0;i<n;i++){
+                if (!visited[i] && graph[nextnode][i]!=0) {
+                    if (mindistance+graph[nextnode][i]<distance[i]) {
+                        distance[i]=mindistance+graph[nextnode][i];
+                        pred[i]=nextnode;
+                        
+                    }
+                    
+                }
+            }
+        }
+        for(int i=0;i<n;i++){
+            System.out.println((i+1)+"=>"+distance[i]);
+        }
+
+    }
+
+    public static void main(String[] args) {
+        int [][] graph={
+        {0, 0, 1, 2, 0, 0, 0},
+        {0, 0, 2, 0, 0, 3, 0},
+        {1, 2, 0, 1, 3, 0, 0},
+        {2, 0, 1, 0, 0, 0, 1},
+        {0, 0, 3, 0, 0, 2, 0},
+        {0, 3, 0, 0, 2, 0, 1},
+        {0, 0, 0, 1, 0, 1, 0}
+    };
+    int n=7;
+    int start=3;
+    dijkstralogic(graph,n,start);
+    }
+}
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+CRC
+
+
+
+
+public class crc{
+
+    public static String xor(String a, String b) {
+            StringBuilder result = new StringBuilder();
+            for (int i = 1; i < b.length(); i++) {
+                result.append(a.charAt(i) == b.charAt(i) ? '0' : '1');
+            }
+            return result.toString();
+        }
+
+
+    public static String divide(String dividend, String divisor) {
+        int pick = divisor.length();
+        String tmp = dividend.substring(0, pick);
+        while (pick < dividend.length()) {
+            if (tmp.charAt(0) == '1') {
+                tmp = xor(divisor, tmp) + dividend.charAt(pick);
+            } else {
+                tmp = xor("0".repeat(pick), tmp) + dividend.charAt(pick);
+            }
+            pick++;
+        }
+        if (tmp.charAt(0) == '1') {
+            tmp = xor(divisor, tmp);
+        } else {
+            tmp = xor("0".repeat(pick), tmp);
+        }
+        return tmp;
+    }
+
+    public static void main(String[] args) {
+        String data = "1101011011";
+        String divisor = "10011";
+        String appended = data + "0".repeat(divisor.length() - 1);
+        String remainder = divide(appended, divisor);
+        System.out.println("Data: " + data);
+        System.out.println("Divisor: " + divisor);
+        System.out.println("CRC Remainder: " + remainder);
+        System.out.println("Codeword: " + data + remainder);
+    }
+ }
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+// FRAMING CHAR AND BIT
+
+#include <stdio.h>
+#include <string.h>
+
+#define FLAG '$'
+#define ESC '\\'
+
+void characterStuffing(char *input) {
+    printf("Character Stuffed Output: %c", FLAG);
+    for (int i = 0; i < strlen(input); i++) {
+        if (input[i] == FLAG || input[i] == ESC) {
+            printf("%c", ESC);
+        }
+        printf("%c", input[i]);
+    }
+    printf("%c\n", FLAG);
+}
+
+void bitStuffing(char *input) {
+    printf("Bit Stuffed Output: 01111110 ");
+    int count = 0;
+    for (int i = 0; i < strlen(input); i++) {
+        if (input[i] == '1') {
+            count++;
+            printf("1");
+            if (count == 5) {
+                printf("0");
+                count = 0;
+            }
+        } else {
+            printf("0");
+            count = 0;
+        }
+    }
+    printf(" 01111110\n");
+}
+
+int main() {
+    int choice;
+    char input[100];
+    printf("Choose Framing Method:\n1. Character Stuffing\n2. Bit Stuffing\nEnter your choice: ");
+    scanf("%d", &choice);
+    getchar(); 
+
+    printf("Enter the data string: ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
+
+    if (choice == 1) {
+        characterStuffing(input);
+    } else if (choice == 2) {
+        bitStuffing(input);
+    } else {
+        printf("Invalid choice!\n");
+    }
+    return 0;
+}
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+// subnetting
+
+#include<stdio.h>
+
+unsigned int calculatemask(int prefix){
+    return prefix==0?0: ~((1<<(32-prefix))-1);
+}
+
+unsigned int iptoInt(char *ip){
+    unsigned int a,b,c,d;
+    sscanf(ip,"%u.%u.%u.%u",&a,&b,&c,&d);
+    return (a<<24)|(b<<16)|(c<<8)|d;
+}
+
+void Inttoip(unsigned int ip,char *buffer){
+    sprintf(buffer,"%u.%u.%u.%u",
+    (ip>>24)&0xFF,
+    (ip>>16)&0xFF,
+    (ip>>8)&0xFF,
+    ip&0xFF
+    );
+}
+
+void  main(){
+    char ip[16];
+    char buffer[16];
+    int prefix,newprefix;
+    unsigned int submask,newsubmask,ipInt;
+
+    scanf("%s",ip);
+    scanf("%d",&prefix);
+
+    newprefix=prefix+1;
+
+    ipInt=iptoInt(ip);
+
+    submask=calculatemask(prefix);
+
+    newsubmask=calculatemask(newprefix);
+
+    int host=(1<<(32-newprefix))-2;
+
+    printf("%d\n",host);
+
+    for(int i=0;i<2;i++){
+        printf("%d\n",i+1);
+        
+        unsigned int network=(ipInt&submask)|(i<<(32-newprefix));
+        unsigned int broad=network|(~newsubmask);
+        unsigned int first=network+1;
+        unsigned int last=broad-1;
+        
+        Inttoip(network,buffer);
+        printf("network %s\n",buffer);
+
+        Inttoip(broad,buffer);
+        printf("broad %s\n",buffer);
+        
+        Inttoip(newsubmask,buffer);
+        printf("new submask %s\n",buffer);
+        
+        Inttoip(first,buffer);
+        printf("first %s\n",buffer);
+        
+        Inttoip(last,buffer);
+        printf("last %s\n",buffer);
+    }
+}
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+// dns client
+
+import java.net.*;
+import java.util.*;
+public class dnsclient {
+    public static void main(String [] args){
+        try {
+            DatagramSocket socket=new DatagramSocket();
+            InetAddress serverAddress=InetAddress.getByName("localhost");
+            int serverport=8053;
+            Scanner sc=new Scanner(System.in);
+            String domain=sc.nextLine();
+            byte [] query=domain.getBytes();
+            DatagramPacket request=new DatagramPacket(query, query.length,serverAddress,serverport);
+            socket.send(request);
+            byte [] buffer=new byte[512];
+            DatagramPacket response=new DatagramPacket(buffer,buffer.length);
+            socket.receive(response);
+            String ip=new String(response.getData(),0,response.getLength());
+            System.out.println(ip);
+        } catch (Exception e) {
+            System.out.println(e);            
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+// dns server
+import java.io.IOException;
+import java.net.*;
+import java.util.*;
+
+class dnsserver{
+    public static void main(String [] args){
+        Map<String,String> dnstable=new HashMap<>();
+        dnstable.put("www.google.com", "142.84.23.156");
+        dnstable.put("www.yahoo.com", "94.137.216.253");
+
+        try{
+            DatagramSocket socket=new DatagramSocket(8053);
+            System.out.println("Server is running");
+            byte []buffer =new byte[512];
+            DatagramPacket request=new DatagramPacket(buffer,buffer.length);
+            socket.receive(request);
+
+            String domain=new String(request.getData(),0,request.getLength());
+
+            System.out.println(domain);
+
+            String ip=dnstable.getOrDefault(domain, "Not found");
+
+            byte [] response=ip.getBytes();
+
+            DatagramPacket reply=new DatagramPacket(response,response.length,request.getAddress(),request.getPort());
+
+            socket.send(reply);
+            System.out.println(ip);
+
+        }catch(IOException e){
+            System.out.println(e);
+        }
+    }
+}
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// DVR
+
+import java.util.Scanner;
+
+public class dvr {
+    static final int INF = 9999;
+    static final int max = 10;
+
+   static void distancevector(int n, int[][] cost, int dist[][], int next[][]) {
+        boolean updated;
+        do {
+            updated = false;
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    for (int k = 0; k < n; k++) {
+                        if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                            dist[i][j] = dist[i][k] + dist[k][j];
+                            next[i][j] = next[i][k];
+                            updated = true;
+                        }
+                    }
+                }
+            }
+        } while (updated);
+    }
+
+   static void initalize(int n,int[][] cost, int dist[][], int next[][]){
+        for (int i = 0; i < n; i++) {
+            for(int j=0;j<n;j++){
+            dist[i][j]=cost[i][j];
+            if(cost[i][j]!=INF && i!=j){
+                next[i][j]=j;
+            }
+            else{
+                next[i][j]=-1;
+            }
+            }
+
+        }
+    }
+
+    static void table(int n,int [][] dist,int [][] next){
+        for(int i=0;i<n;i++){
+            System.out.println("Destination\tnext\tdistance ");
+            for(int j=0;j<n;j++){
+                if (dist[i][j]==INF) {
+                    System.out.println(j+"\t\t-1\t\tINF");
+                    
+                }
+                else{
+                    System.out.println(j+"\t\t"+next[i][j]+"\t\t"+dist[i][j]);
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[][] cost = new int[max][max];
+        int[][] dist = new int[max][max];
+        int[][] next = new int[max][max];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                cost[i][j] = sc.nextInt();
+            }
+        }
+        initalize(n, cost, dist, next);
+        distancevector(n, cost, dist, next);
+        table(n, dist, next);
+    }
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+// subnetting
+
+#include<stdio.h>
+
+unsigned int calculatemask(int prefix){
+    return prefix==0?0: ~((1<<(32-prefix))-1);
+}
+
+unsigned int iptoInt(char *ip){
+    unsigned int a,b,c,d;
+    sscanf(ip,"%u.%u.%u.%u",&a,&b,&c,&d);
+    return (a<<24)|(b<<16)|(c<<8)|d;
+}
+
+void Inttoip(unsigned int ip,char *buffer){
+    sprintf(buffer,"%u.%u.%u.%u",
+    (ip>>24)&0xFF,
+    (ip>>16)&0xFF,
+    (ip>>8)&0xFF,
+    ip&0xFF
+    );
+}
+
+void  main(){
+    char ip[16];
+    char buffer[16];
+    int prefix,newprefix;
+    unsigned int submask,newsubmask,ipInt;
+
+    scanf("%s",ip);
+    scanf("%d",&prefix);
+
+    newprefix=prefix+1;
+
+    ipInt=iptoInt(ip);
+
+    submask=calculatemask(prefix);
+
+    newsubmask=calculatemask(newprefix);
+
+    int host=(1<<(32-newprefix))-2;
+
+    printf("%d\n",host);
+
+    for(int i=0;i<2;i++){
+        printf("%d\n",i+1);
+        
+        unsigned int network=(ipInt&submask)|(i<<(32-newprefix));
+        unsigned int broad=network|(~newsubmask);
+        unsigned int first=network+1;
+        unsigned int last=broad-1;
+        
+        Inttoip(network,buffer);
+        printf("network %s\n",buffer);
+
+        Inttoip(broad,buffer);
+        printf("broad %s\n",buffer);
+        
+        Inttoip(newsubmask,buffer);
+        printf("new submask %s\n",buffer);
+        
+        Inttoip(first,buffer);
+        printf("first %s\n",buffer);
+        
+        Inttoip(last,buffer);
+        printf("last %s\n",buffer);
+    }
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------
+// PingService
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+
+public class PingService{
+    public static void main(String[] args) {
+        if (args.length != 1){
+            System.out.println("Usage: java PingService <hostname>");
+            return;
+        }
+        String hostname = args[0];
+
+        try {
+            System.out.println("Pinging: " + hostname + "...");
+            InetAddress inetAddress = InetAddress.getByName(hostname);
+            boolean isReachable = inetAddress.isReachable(5000);
+            
+            if(isReachable){
+                System.out.println("Host " + hostname + "  Is reachable");
+                System.out.println("IP Addres is " + inetAddress.getHostAddress());
+            }
+            else{
+                System.out.println("Host " + hostname + " Is not reachable");
+            }
+        } catch (UnknownHostException e) {
+            System.out.println("Unknown Host: " + hostname);
+        }
+        catch (IOException e){
+            System.out.println("Error occured while pinging " + hostname + " : " + e.getMessage());
+        }
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+// leakybucket
+
+#include <stdio.h>
+int main() {
+ int bucket_size, output_rate, input_packets, stored = 0, time;
+    
+ printf("Enter bucket size: ");
+ scanf("%d", &bucket_size);
+
+ printf("Enter output rate (leak rate): ");
+ scanf("%d", &output_rate);
+
+ printf("Enter number of cycles (time units): ");
+ scanf("%d", &time);
+
+ while (time--) {
+    printf("\nEnter number of packets arriving: ");
+    scanf("%d", &input_packets);
+
+    // Check for overflow condition
+    if (stored + input_packets > bucket_size) {
+        printf("Bucket overflow! %d packets dropped.\n", (stored + input_packets) - bucket_size);
+        stored = bucket_size;
+    }
+    else
+    {
+        stored += input_packets;
+    }
+    printf("Packets currently in bucket: %d\n", stored);
+
+    // Leak / Send packets
+    if (stored >= output_rate) {
+        stored -= output_rate;
+        printf("Packets sent: %d\n", output_rate);
+    }
+    else
+    {
+        printf("Packets sent: %d\n", stored);
+        stored = 0;
+    }
+    printf("Packets left in bucket after sending: %d\n", stored);
+
+}
+return 0;
+
+}
+
+------------------------------------------------------------------------------------------------------------------------------
+// XORAND
+
+
+import java.util.Scanner;
+
+public class xand {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Take user input
+        System.out.print("Enter a string: ");
+        String str = scanner.nextLine();  // Read input including spaces
+
+        // Display the header
+        System.out.println("\nOriginal String: " + str);
+        System.out.println("Character\tASCII\tAND(127)\tXOR(127)");
+        System.out.println("---------------------------------------------");
+
+        // Process each character in the string
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+            int asciiValue = ch;
+            
+            // Perform AND and XOR operations
+            char andResult = (char) (ch & 127);  // Bitwise AND with 127
+            char xorResult = (char) (ch ^ 127);  // Bitwise XOR with 127
+
+            // Display results
+            // System.out.printf("    %c\t\t%d\t   %d\t\t   %d\n", ch, asciiValue, andResult, xorResult);
+            System.out.printf("    %c\t\t%d\t   %d\t\t   %d\n", ch, asciiValue, (int)andResult, (int)xorResult);
+        }
+
+        scanner.close();
+    }
+}
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// XOR
+
+import java.util.Scanner;
+
+public class xor {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Read the input string
+        System.out.print("Enter a string: ");
+        String str = scanner.nextLine();  // Read the entire line of input
+
+        // XOR each character with 0 and display the result
+        for (int i = 0; i < str.length(); i++) {
+            System.out.print((char) (str.charAt(i) ^ 0));  // XOR with 0 (no change)
+        }
+
+        scanner.close();
+    }
+}
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+// SimpleServer
+
+import java.io.*;
+import java.net.*;
+
+public class SimpleServer {
+    public static void main(String[] args) {
+        final int PORT = 5000; // server port number
+
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server started. Waiting for client...");
+
+            Socket socket = serverSocket.accept();
+            System.out.println("Client connected: " + socket.getInetAddress());
+
+            // Input & Output streams
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            // Read message from client
+            String clientMessage = in.readLine();
+            System.out.println("Client says: " + clientMessage);
+
+            // Send response to client
+            // out.println("Hello Topper Anna, Party...... 😆!");
+
+            // Close connection
+            socket.close();
+            System.out.println("Connection closed.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+// SimpleClient
+
+import java.io.*;
+import java.net.*;
+
+public class SimpleClient {
+    public static void main(String[] args) {
+        final String SERVER_IP = "127.0.0.1"; // localhost
+        final int PORT = 5000;
+
+        try (Socket socket = new Socket(SERVER_IP, PORT)) {
+            System.out.println("Connected to server.");
+
+            // Input & Output streams
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            // Send message to server
+            out.println("Hello Server!");
+
+            // Read response
+            String serverMessage = in.readLine();
+            System.out.println("Server says: " + serverMessage);
+
+            // Close connection
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
